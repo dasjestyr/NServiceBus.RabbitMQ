@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Threading.Tasks;
     using Extensibility;
+    using NServiceBus.Routing;
     using NUnit.Framework;
     using Routing;
 

@@ -8,8 +8,9 @@
     using DelayedDelivery;
     using Features;
     using global::RabbitMQ.Client.Events;
+    using NServiceBus.Routing;
     using Performance.TimeToBeReceived;
-    using Routing;
+    
     using Settings;
 
     sealed class RabbitMQTransportInfrastructure : TransportInfrastructure

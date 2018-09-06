@@ -5,6 +5,7 @@
     using Configuration.AdvancedExtensibility;
     using RabbitMQ.Client.Events;
     using Transport.RabbitMQ;
+    using Transport.RabbitMQ.Routing;
 
     /// <summary>
     /// Adds access to the RabbitMQ transport config to the global Transports object.
@@ -28,6 +29,14 @@
         /// <param name="transportExtensions"></param>
         public static TransportExtensions<RabbitMQTransport> UseConventionalRoutingTopology(this TransportExtensions<RabbitMQTransport> transportExtensions) =>
             transportExtensions.UseRoutingTopology(durable => new ConventionalRoutingTopology(durable));
+
+        /// <summary>
+        /// Uses the topic routing topology.
+        /// </summary>
+        /// <param name="transportExtensions"></param>
+        /// <returns></returns>
+        public static TransportExtensions<RabbitMQTransport> UseTopicRoutingTopology(this TransportExtensions<RabbitMQTransport> transportExtensions) =>
+            transportExtensions.UseRoutingTopology(durable => new TopicRoutingTopology(durable));
 
         /// <summary>
         /// Uses the direct routing topology with the specified conventions.

@@ -9,6 +9,7 @@
     using Features;
     using NServiceBus.AcceptanceTests;
     using NServiceBus.AcceptanceTests.EndpointTemplates;
+    using NServiceBus.Routing;
     using NUnit.Framework;
     using Performance.TimeToBeReceived;
     using Routing;
