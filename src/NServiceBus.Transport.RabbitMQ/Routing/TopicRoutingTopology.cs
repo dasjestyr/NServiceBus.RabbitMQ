@@ -8,6 +8,7 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
 
     class TopicRoutingTopology : IRoutingTopology
     {
+        const string RoutingKeyHeaderName = "routingKey";
         readonly bool useDurableExchanges;
 
         public TopicRoutingTopology(bool useDurableExchanges)
@@ -28,24 +29,43 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
 
         public void Publish(IModel channel, Type type, OutgoingMessage message, IBasicProperties properties)
         {
-            var routingKey = message.Headers.ContainsKey("routingKey") 
-                ? message.Headers["routingKey"] 
-                : null;
+            if (ContainsTopicRoutingInformation(message, out var topicName, out var routingKey))
+            {
+                channel.BasicPublish(topicName, routingKey, true, properties, message.Body);
+            }
+            else
+            {
+                channel.BasicPublish(
+                    ExchangeName(type),
+                    routingKey,
+                    true,
+                    properties,
+                    message.Body);
+            }
+        }
 
-            // why do i need a type? Isn't it just supposed to be a destination?
+        static bool ContainsTopicRoutingInformation(OutgoingMessage message, out string topicName, out string routingKey)
+        {
+            var hasTopic = message.Headers.TryGetValue(TopicRoutingInfo.DestinationTopicOptionsHeaderName, out var destination) && destination != null;
+            var hasRoutingKey = message.Headers.TryGetValue(TopicRoutingInfo.RoutingKeyOptionsHeaderName, out var key) && key != null;
 
-            channel.BasicPublish(
-                "TODO: TOPIC NAME", // may need to derive this somehow, or make an extension
-                routingKey, 
-                true, 
-                properties,
-                message.Body);
+            topicName = destination;
+            routingKey = key;
+
+            return hasTopic && hasRoutingKey;
+        }
+
+        static string ExchangeName(Type type) => type.Namespace + ":" + type.Name;
+
+        public void Publish(IModel channel, string topicName, string routingKey, OutgoingMessage message, IBasicProperties properties)
+        {
+            channel.BasicPublish(topicName, routingKey, true, properties, message.Body);
         }
 
         public void Send(IModel channel, string address, OutgoingMessage message, IBasicProperties properties)
         {
-            var routingKey = message.Headers.ContainsKey("routingKey")
-                ? message.Headers["routingKey"]
+            var routingKey = message.Headers.ContainsKey(RoutingKeyHeaderName)
+                ? message.Headers[RoutingKeyHeaderName]
                 : null;
 
             channel.BasicPublish(address, routingKey, true, properties, message.Body);

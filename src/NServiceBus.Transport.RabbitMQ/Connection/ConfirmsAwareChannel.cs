@@ -68,21 +68,21 @@ namespace NServiceBus.Transport.RabbitMQ
 
         public Task PublishMessage(Type type, OutgoingMessage message, IBasicProperties properties)
         {
-            Task task;
+            Task confirmationTask;
 
             if (usePublisherConfirms)
             {
-                task = GetConfirmationTask();
+                confirmationTask = GetConfirmationTask();
                 properties.SetConfirmationId(channel.NextPublishSeqNo);
             }
             else
             {
-                task = TaskEx.CompletedTask;
+                confirmationTask = TaskEx.CompletedTask;
             }
-
+            
             routingTopology.Publish(channel, type, message, properties);
 
-            return task;
+            return confirmationTask;
         }
 
         public Task RawSendInCaseOfFailure(string address, byte[] body, IBasicProperties properties)
