@@ -12,7 +12,6 @@
     using NServiceBus.Routing;
     using NUnit.Framework;
     using Performance.TimeToBeReceived;
-    using Routing;
     using Settings;
 
     public class When_the_broker_connection_is_lost : NServiceBusAcceptanceTest

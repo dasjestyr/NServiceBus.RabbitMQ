@@ -6,7 +6,6 @@
     using Extensibility;
     using NServiceBus.Routing;
     using NUnit.Framework;
-    using Routing;
 
     [TestFixture]
     class When_consuming_messages : RabbitMqContext

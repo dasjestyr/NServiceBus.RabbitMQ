@@ -10,7 +10,6 @@
     using NServiceBus.AcceptanceTests.EndpointTemplates;
     using NServiceBus.Routing;
     using NUnit.Framework;
-    using Routing;
     using Settings;
 
     public class When_using_a_custom_message_id_strategy : NServiceBusAcceptanceTest
