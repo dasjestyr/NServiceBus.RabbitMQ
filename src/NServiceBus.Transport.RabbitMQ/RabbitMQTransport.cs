@@ -4,6 +4,7 @@
     using Transport.RabbitMQ;
     using Transport;
 
+    /// <inheritdoc />
     /// <summary>
     /// Transport definition for RabbitMQ.
     /// </summary>

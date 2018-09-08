@@ -8,43 +8,35 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
 
     class TopicRoutingTopology : IRoutingTopology
     {
-        const string RoutingKeyHeaderName = "routingKey";
         readonly bool useDurableExchanges;
+        readonly ITopicManager topicManager;
 
-        public TopicRoutingTopology(bool useDurableExchanges)
+        public TopicRoutingTopology(bool useDurableExchanges, ITopicManager topicManager)
         {
             this.useDurableExchanges = useDurableExchanges;
+            this.topicManager = topicManager;
         }
 
         public void SetupSubscription(IModel channel, Type type, string subscriberName)
         {
             // at this stage, we are only interested in our own queue and exchange
-            channel.ExchangeBind(subscriberName, subscriberName, string.Empty);
+            // this is subscribe by type which we dont need
+            return;
         }
 
         public void TeardownSubscription(IModel channel, Type type, string subscriberName)
         {
-            channel.ExchangeUnbind(subscriberName, subscriberName, string.Empty, null);
+            // we're not subscribed by type, so no need
+            return;
         }
 
         public void Publish(IModel channel, Type type, OutgoingMessage message, IBasicProperties properties)
         {
-            if (ContainsTopicRoutingInformation(message, out var topicName, out var routingKey))
-            {
-                channel.BasicPublish(topicName, routingKey, true, properties, message.Body);
-            }
-            else
-            {
-                channel.BasicPublish(
-                    ExchangeName(type),
-                    routingKey,
-                    true,
-                    properties,
-                    message.Body);
-            }
+            TryGetRoutingInfo(message, out var topicName, out var routingKey);
+            channel.BasicPublish(topicName, routingKey, true, properties, message.Body);
         }
 
-        static bool ContainsTopicRoutingInformation(OutgoingMessage message, out string topicName, out string routingKey)
+        static bool TryGetRoutingInfo(OutgoingMessage message, out string topicName, out string routingKey)
         {
             var hasTopic = message.Headers.TryGetValue(TopicRoutingInfo.DestinationTopicOptionsHeaderName, out var destination) && destination != null;
             var hasRoutingKey = message.Headers.TryGetValue(TopicRoutingInfo.RoutingKeyOptionsHeaderName, out var key) && key != null;
@@ -55,8 +47,6 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
             return hasTopic && hasRoutingKey;
         }
 
-        static string ExchangeName(Type type) => type.Namespace + ":" + type.Name;
-
         public void Publish(IModel channel, string topicName, string routingKey, OutgoingMessage message, IBasicProperties properties)
         {
             channel.BasicPublish(topicName, routingKey, true, properties, message.Body);
@@ -64,11 +54,7 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
 
         public void Send(IModel channel, string address, OutgoingMessage message, IBasicProperties properties)
         {
-            var routingKey = message.Headers.ContainsKey(RoutingKeyHeaderName)
-                ? message.Headers[RoutingKeyHeaderName]
-                : null;
-
-            channel.BasicPublish(address, routingKey, true, properties, message.Body);
+            channel.BasicPublish(address, string.Empty, true, properties, message.Body);
         }
 
         public void RawSendInCaseOfFailure(IModel channel, string address, byte[] body, IBasicProperties properties)
@@ -78,13 +64,17 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
 
         public void Initialize(IModel channel, IEnumerable<string> receivingAddresses, IEnumerable<string> sendingAddresses)
         {
+            var addresses = receivingAddresses.Concat(sendingAddresses).ToList();
+            
             // create our queue and our exchange
-            foreach (var address in receivingAddresses.Concat(sendingAddresses))
+            foreach (var address in addresses)
             {
                 channel.QueueDeclare(address, useDurableExchanges, false, false, null);
                 channel.ExchangeDeclare(address, ExchangeType.Fanout, useDurableExchanges);
                 channel.QueueBind(address, address, string.Empty);
             }
+
+            topicManager.Initialize(channel, addresses);
         }
 
         public void BindToDelayInfrastructure(IModel channel, string address, string deliveryExchange, string routingKey)
