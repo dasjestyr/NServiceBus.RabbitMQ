@@ -9,9 +9,9 @@ namespace NServiceBus.Transport.RabbitMQ.Routing
     class TopicRoutingTopology : IRoutingTopology
     {
         readonly bool useDurableExchanges;
-        readonly ITopicManager topicManager;
+        readonly TopicManager topicManager;
 
-        public TopicRoutingTopology(bool useDurableExchanges, ITopicManager topicManager)
+        public TopicRoutingTopology(bool useDurableExchanges, TopicManager topicManager)
         {
             this.useDurableExchanges = useDurableExchanges;
             this.topicManager = topicManager;

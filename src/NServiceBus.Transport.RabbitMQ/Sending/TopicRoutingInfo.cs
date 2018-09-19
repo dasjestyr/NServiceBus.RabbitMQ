@@ -9,6 +9,7 @@
         /// The options header name for the routing key
         /// </summary>
         public const string RoutingKeyOptionsHeaderName = "routing-key";
+
         /// <summary>
         /// The options header name for the destination topic
         /// </summary>

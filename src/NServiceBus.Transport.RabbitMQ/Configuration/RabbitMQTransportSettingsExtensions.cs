@@ -34,7 +34,7 @@
         /// Uses the topic routing topology.
         /// </summary>
         /// <param name="transportExtensions"></param>
-        public static ITopicManager UseTopicRoutingTopology(this TransportExtensions<RabbitMQTransport> transportExtensions)
+        public static TopicManager UseTopicRoutingTopology(this TransportExtensions<RabbitMQTransport> transportExtensions)
         {
             var topicManager = new TopicManager();
             transportExtensions.UseRoutingTopology(durable => new TopicRoutingTopology(durable, topicManager));
